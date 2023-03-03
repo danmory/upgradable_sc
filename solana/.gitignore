@@ -1,10 +1,2 @@
-/target
-node_modules
+wallet
 test-ledger
-
-# Added by cargo
-#
-# already existing elements were commented out
-
-#/target
-/Cargo.lock

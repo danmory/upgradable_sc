@@ -1,12 +1,13 @@
 [package]
-name = "solana"
+name = "counter"
 version = "0.1.0"
 edition = "2021"
-
-[lib]
-crate-type = ["cdylib", "lib"] 
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-solana-program = "1.14.5"
+borsh = "0.10.2"
+solana-program = "1.15.2"
+
+[lib]
+crate-type = ["cdylib", "lib"]
