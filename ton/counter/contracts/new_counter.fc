@@ -2,13 +2,15 @@
 
 const op::increase = "op::increase"c; ;; 7e8764ef
 const op::upgrade = "op::upgrade"c; ;; dbfaf817
+const op::decrease = "op::decrease"c; ;; e78525c4
 
-global int ctx_id;
+
+
 global int ctx_counter;
+
 
 () load_data() impure {
     var ds = get_data().begin_parse();
-    ctx_id = ds~load_uint(32);
     ctx_counter = ds~load_uint(32);
     ds.end_parse();
 }
@@ -17,7 +19,6 @@ global int ctx_counter;
 () save_data() impure {
     set_data(
         begin_cell()
-            .store_uint(ctx_id, 32)
             .store_uint(ctx_counter, 32)
             .end_cell()
     );
@@ -36,13 +37,18 @@ global int ctx_counter;
     int op = in_msg_body~load_uint(32);
     if (op == op::increase) {
         load_data();
-        int increase_by = in_msg_body~load_uint(32);
-        ctx_counter += increase_by;
+        ctx_counter += 1;
+        save_data();
+        return ();
+    }
+    if (op == op::decrease) {
+        load_data();
+        ctx_counter -= 1;
         save_data();
         return ();
     }
     if (op == op::upgrade) {
-        var code = in_msg_body~load_ref();
+        cell code = in_msg_body~load_ref();
         throw_if(35, code.null?());
         set_code(code);
         return ();
@@ -54,10 +60,4 @@ global int ctx_counter;
 (int) get_counter() method_id {
     load_data();
     return ctx_counter;
-}
-
-
-(int) get_id() method_id {
-    load_data();
-    return ctx_id;
 }
