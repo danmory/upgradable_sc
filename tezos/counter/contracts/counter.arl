@@ -1,0 +1,26 @@
+archetype counter(owner: address)
+
+variable counter: nat = 0
+
+asset funcs identified by opcode to big_map {
+  opcode: nat;
+  code: lambda<nat, nat>;
+}
+
+entry set_code(op: nat, f: lambda<nat, nat>) {
+  called by owner 
+  effect{
+    funcs.put({op; f})
+  }
+}
+
+entry perform(op: nat) {
+  effect {
+    var f = funcs[(op)].code;
+    counter := exec_lambda(f, counter);
+  }
+}
+
+view get_counter(): nat {
+  return counter
+}
