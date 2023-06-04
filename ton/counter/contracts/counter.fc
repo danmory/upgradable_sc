@@ -3,12 +3,13 @@
 const op::increase = "op::increase"c; ;; 7e8764ef
 const op::upgrade = "op::upgrade"c; ;; dbfaf817
 
-
 global int ctx_counter;
+global slice owner;
 
 
 () load_data() impure {
     var ds = get_data().begin_parse();
+    owner = ds~load_msg_addr();
     ctx_counter = ds~load_uint(32);
     ds.end_parse();
 }
@@ -17,6 +18,7 @@ global int ctx_counter;
 () save_data() impure {
     set_data(
         begin_cell()
+            .store_slice(owner)
             .store_uint(ctx_counter, 32)
             .end_cell()
     );
@@ -27,24 +29,31 @@ global int ctx_counter;
     if (in_msg_body.slice_empty?()) {
         return ();
     }
+
     slice cs = in_msg_full.begin_parse();
     int flags = cs~load_uint(4); 
     if (flags & 1) { ;; ignore all bounced messages
         return ();
     }
+    slice sender_address = cs~load_msg_addr();
+
     int op = in_msg_body~load_uint(32);
+    load_data();
+    
     if (op == op::increase) {
-        load_data();
         ctx_counter += 1;
         save_data();
         return ();
     }
+
     if (op == op::upgrade) {
+        throw_unless(403, equal_slices(sender_address, owner));
         cell code = in_msg_body~load_ref();
         throw_if(35, code.null?());
         set_code(code);
         return ();
     }
+
     throw(0xffff);
 }
 
@@ -52,4 +61,9 @@ global int ctx_counter;
 (int) get_counter() method_id {
     load_data();
     return ctx_counter;
+}
+
+(slice) get_owner() method_id {
+    load_data();
+    return owner;
 }

@@ -10,11 +10,15 @@ import {
 } from 'ton-core';
 
 export type CounterConfig = {
+  owner: Address;
   counter: number;
 };
 
 export function counterConfigToCell(config: CounterConfig): Cell {
-  return beginCell().storeUint(config.counter, 32).endCell();
+  return beginCell().
+    storeAddress(config.owner).
+    storeUint(config.counter, 32).
+    endCell();
 }
 
 export const Opcodes = {
@@ -96,5 +100,10 @@ export class Counter implements Contract {
   async getCounter(provider: ContractProvider) {
     const result = await provider.get('get_counter', []);
     return result.stack.readNumber();
+  }
+
+  async getOwner(provider: ContractProvider) {
+    const result = await provider.get('get_owner', []);
+    return result.stack.readAddress();
   }
 }
